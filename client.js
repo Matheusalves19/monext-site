@@ -9,10 +9,19 @@ let saldoCaixa = parseFloat(localStorage.getItem("saldoCaixa") || "0");
 let caixaAberto = localStorage.getItem("caixaAberto") === "true";
 
 // Validação de sessão
-if (!usuario || !senhaUsuario || !idCaixa) {
-  alert("Sessão expirada. Faça login novamente.");
-  window.location.href = "index.html";
+let sessao = {};
+try {
+    sessao = JSON.parse(localStorage.getItem("usuarioLogado")) || {};
+} catch (e) {
+    sessao = {};
 }
+
+if (!sessao.id && !sessao.nome) {
+    alert("Sessão expirada. Faça login novamente.");
+    window.location.href = "index.html";
+    return;
+}
+
 
 // Recupera clientes
 let clientes = JSON.parse(localStorage.getItem("clientes")) || [];
@@ -399,4 +408,5 @@ document.getElementById("tabelaClientes").addEventListener("click", e => {
 // Inicializa tabela
 renderizarClientes();
 atualizarSaldo();
+
 
