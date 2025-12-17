@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!sessao || !sessao.nome || !sessao.senha) {
         alert("Sessão expirada. Faça login novamente.");
-        window.location.href = "Login.html";
+        window.location.href = "index.html";
         return;
     }
 
@@ -279,3 +279,4 @@ document.addEventListener("DOMContentLoaded", () => {
     // Inicializa
     atualizarStatus();
 });
+
