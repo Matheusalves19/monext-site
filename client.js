@@ -117,11 +117,21 @@ document.addEventListener("DOMContentLoaded", () => {
   renderizarClientes();
 
   // ===============================
+  // 🔗 MODAIS
+  // ===============================
+  const modalEmprestimoEl = document.getElementById("modalEmprestimo");
+  const modalEmprestimo = new bootstrap.Modal(modalEmprestimoEl);
+
+  const modalDetalhesEl = document.getElementById("modalDetalhes");
+  const modalDetalhes = new bootstrap.Modal(modalDetalhesEl);
+
+  // ===============================
   // ➕ ADICIONAR CLIENTE
   // ===============================
   const btnAdicionar = document.getElementById("btnAdicionarCliente");
   if (btnAdicionar) {
     btnAdicionar.addEventListener("click", () => {
+      // Abrir modal de empréstimo vazio para criar cliente
       const nome = prompt("Nome do cliente:");
       if (!nome) return;
 
@@ -153,84 +163,70 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ===============================
-// 🔁 EVENTOS DA TABELA (todos os botões)
-// ===============================
-document.getElementById("tabelaClientes")?.addEventListener("click", e => {
-  const btn = e.target.closest("button");
-  if (!btn) return;
+  // 🔁 EVENTOS DA TABELA
+  // ===============================
+  document.getElementById("tabelaClientes")?.addEventListener("click", e => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
 
-  const id = parseInt(btn.dataset.id);
-  const cliente = clientes.find(c => c.id === id);
-  if (!cliente) return;
+    const id = parseInt(btn.dataset.id);
+    const cliente = clientes.find(c => c.id === id);
 
-  // ❌ EXCLUIR
-  if (btn.classList.contains("btn-excluir")) {
-    const senha = prompt("Senha admin:");
-    if (senha === senhaAdmin) {
-      clientes = clientes.filter(c => c.id !== id);
+    if (btn.classList.contains("btn-excluir")) {
+      const senha = prompt("Senha admin:");
+      if (senha === senhaAdmin) {
+        clientes = clientes.filter(c => c.id !== id);
+        localStorage.setItem("clientes", JSON.stringify(clientes));
+        renderizarClientes();
+      } else {
+        alert("Senha incorreta!");
+      }
+    }
+
+    if (btn.classList.contains("btn-novo")) {
+      // Abrir modal de empréstimo para este cliente
+      document.getElementById("clienteIdEmprestimo").value = cliente.id;
+      document.getElementById("valorEmprestimo").value = "";
+      document.getElementById("jurosEmprestimo").value = "";
+      document.getElementById("parcelasEmprestimo").value = "1";
+      modalEmprestimo.show();
+    }
+
+    if (btn.classList.contains("btn-editar")) {
+      const novoNome = prompt("Alterar nome do cliente:", cliente.nome);
+      if (!novoNome) return;
+
+      const novoCPF = prompt("Alterar CPF (somente números):", cliente.cpf);
+      if (!novoCPF || !validarCPF(novoCPF)) {
+        alert("CPF inválido!");
+        return;
+      }
+
+      cliente.nome = novoNome;
+      cliente.cpf = novoCPF;
+      cliente.dataUltimaAlteracao = new Date().toLocaleString("pt-BR");
       localStorage.setItem("clientes", JSON.stringify(clientes));
       renderizarClientes();
-      alert("Cliente excluído!");
-    } else {
-      alert("Senha incorreta!");
     }
-  }
 
-  // ➕ NOVO EMPRÉSTIMO
-  if (btn.classList.contains("btn-novo")) {
-    const valor = prompt("Valor do empréstimo R$:");
-    if (!valor || isNaN(valor)) return alert("Valor inválido!");
-    const juros = prompt("Juros (%)") || "0";
-    const parcelas = prompt("Número de parcelas") || "1";
+    if (btn.classList.contains("btn-detalhes")) {
+      const detalhesBody = document.getElementById("detalhesBody");
+      let html = `<p><strong>Nome:</strong> ${cliente.nome}</p>`;
+      html += `<p><strong>CPF:</strong> ${formatarCPF(cliente.cpf)}</p>`;
+      html += `<p><strong>Dívida:</strong> R$ ${cliente.divida.toFixed(2)}</p>`;
 
-    cliente.emprestimos = cliente.emprestimos || [];
-    cliente.emprestimos.push({
-      valor: parseFloat(valor),
-      juros: parseFloat(juros),
-      parcelas: Array.from({ length: parseInt(parcelas) }, (_, i) => ({
-        numero: i + 1,
-        valor: parseFloat(valor) / parseInt(parcelas),
-        pago: false
-      }))
-    });
+      if (cliente.emprestimos?.length > 0) {
+        html += `<h6>Empréstimos:</h6><ul>`;
+        cliente.emprestimos.forEach(emp => {
+          html += `<li>Valor: R$ ${emp.valor}, Parcelas: ${emp.parcelas.length}</li>`;
+        });
+        html += `</ul>`;
+      }
 
-    cliente.dataUltimaAlteracao = new Date().toLocaleString("pt-BR");
-    localStorage.setItem("clientes", JSON.stringify(clientes));
-    renderizarClientes();
-    alert("Empréstimo adicionado!");
-  }
-
-  // ✏️ EDITAR CLIENTE
-  if (btn.classList.contains("btn-editar")) {
-    const novoNome = prompt("Novo nome do cliente:", cliente.nome);
-    if (!novoNome) return;
-
-    const novoCPF = prompt("Novo CPF (somente números):", cliente.cpf);
-    if (!novoCPF || !validarCPF(novoCPF)) return alert("CPF inválido!");
-
-    cliente.nome = novoNome;
-    cliente.cpf = novoCPF.replace(/\D/g, "");
-    cliente.dataUltimaAlteracao = new Date().toLocaleString("pt-BR");
-
-    localStorage.setItem("clientes", JSON.stringify(clientes));
-    renderizarClientes();
-    alert("Cliente atualizado!");
-  }
-
-  // 📋 DETALHES
-  if (btn.classList.contains("btn-detalhes")) {
-    let detalhes = `Nome: ${cliente.nome}\nCPF: ${formatarCPF(cliente.cpf)}\nDivida: R$ ${cliente.divida.toFixed(2)}\n\nEmpréstimos:\n`;
-    if (cliente.emprestimos?.length) {
-      cliente.emprestimos.forEach((emp, i) => {
-        detalhes += `Empréstimo ${i + 1}: R$ ${emp.valor.toFixed(2)}, Juros: ${emp.juros}%, Parcelas: ${emp.parcelas.length}\n`;
-      });
-    } else {
-      detalhes += "Nenhum empréstimo.";
+      detalhesBody.innerHTML = html;
+      modalDetalhes.show();
     }
-    alert(detalhes);
-  }
-});
-
+  });
 
   // ===============================
   // 🔍 PESQUISA
@@ -255,5 +251,41 @@ document.getElementById("tabelaClientes")?.addEventListener("click", e => {
     window.location.href = "index.html";
   });
 
-});
+  // ===============================
+  // 💾 SALVAR EMPRÉSTIMO
+  // ===============================
+  document.getElementById("btnSalvarEmprestimo")?.addEventListener("click", () => {
+    const idCliente = parseInt(document.getElementById("clienteIdEmprestimo").value);
+    const cliente = clientes.find(c => c.id === idCliente);
+    if (!cliente) return;
 
+    const valor = parseFloat(document.getElementById("valorEmprestimo").value);
+    const juros = parseFloat(document.getElementById("jurosEmprestimo").value);
+    const parcelas = parseInt(document.getElementById("parcelasEmprestimo").value);
+
+    if (isNaN(valor) || valor <= 0) {
+      alert("Informe um valor válido!");
+      return;
+    }
+
+    // Cria parcelas
+    const parcelasArray = [];
+    for (let i = 0; i < parcelas; i++) {
+      parcelasArray.push({ valor: valor / parcelas, pago: false });
+    }
+
+    cliente.emprestimos.push({
+      valor,
+      juros,
+      parcelas: parcelasArray
+    });
+
+    cliente.dataUltimaAlteracao = new Date().toLocaleString("pt-BR");
+    localStorage.setItem("clientes", JSON.stringify(clientes));
+    renderizarClientes();
+
+    modalEmprestimo.hide();
+    alert("Empréstimo adicionado com sucesso!");
+  });
+
+});
