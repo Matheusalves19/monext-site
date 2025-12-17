@@ -1,16 +1,23 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    // 🔐 Recupera sessão
-    const sessao = JSON.parse(localStorage.getItem("usuarioLogado"));
+    // 🔐 Recupera sessão do localStorage de forma segura
+    let sessao = {};
+    try {
+        sessao = JSON.parse(localStorage.getItem("usuarioLogado")) || {};
+    } catch (e) {
+        console.warn("Erro ao ler sessão:", e);
+        sessao = {};
+    }
 
-    if (!sessao || !sessao.nome || !sessao.senha) {
+    // ⚠️ Valida apenas os campos essenciais
+    if (!sessao.id && !sessao.nome) { // exige id ou nome
         alert("Sessão expirada. Faça login novamente.");
-        window.location.href = "index.html";
+        window.location.href = "index.html"; // redireciona para login
         return;
     }
 
-    const usuario = sessao.nome;
-    const senhaUsuario = sessao.senha;
+    const usuario = sessao.nome || "Usuário";
+    const senhaUsuario = sessao.senha || "";
     const rpUsuario = sessao.rp || "—";
 
     // Exibe nome do usuário
@@ -279,5 +286,3 @@ document.addEventListener("DOMContentLoaded", () => {
     // Inicializa
     atualizarStatus();
 });
-
-
