@@ -43,10 +43,6 @@ let clientes = JSON.parse(localStorage.getItem("clientes") || "[]");
 // Senha de admin
 const senhaAdmin = "admin";
 
-// Funções de CPF, cálculo de dívida, renderização, modais e eventos seguem igual ao código original...
-
-
-
 // Função para validar CPF
 function validarCPF(cpf) {
   cpf = cpf.replace(/\D/g, "");
@@ -425,5 +421,6 @@ document.getElementById("tabelaClientes").addEventListener("click", e => {
 // Inicializa tabela
 renderizarClientes();
 atualizarSaldo();
+
 
 
