@@ -1,31 +1,50 @@
-// Recupera dados da sessão
-const sessao = JSON.parse(localStorage.getItem("usuarioLogado") || "{}");
-const usuario = sessao?.nome || null;
-const senhaUsuario = sessao?.senha || null;
+// ===============================
+// 🔐 SESSÃO
+// ===============================
+let sessao = {};
+try {
+  sessao = JSON.parse(localStorage.getItem("usuarioLogado")) || {};
+} catch (e) {
+  sessao = {};
+}
 
-// Recupera idCaixa de localStorage ou da sessão
-let idCaixa = localStorage.getItem("idCaixa") || sessao?.idCaixa;
-if (idCaixa) idCaixa = parseInt(idCaixa);
-else idCaixa = null; // garante valor nulo se não existir
+const usuario = sessao.nome;
+const senhaUsuario = sessao.senha;
+let idCaixa = parseInt(sessao.idCaixa || localStorage.getItem("idCaixa") || "0");
 
-// 🔗 Integração com o caixa
-let saldoCaixa = parseFloat(localStorage.getItem("saldoCaixa") || "0");
-let caixaAberto = localStorage.getItem("caixaAberto") === "true";
-
-// Validação de sessão
-if (!usuario || !senhaUsuario || !idCaixa) {
-  // Redireciona para login sem quebrar
+if (!usuario && !senhaUsuario) {
+  alert("Sessão expirada. Faça login novamente.");
   localStorage.removeItem("usuarioLogado");
   localStorage.removeItem("idCaixa");
-  alert("Sessão expirada. Faça login novamente.");
   window.location.href = "index.html";
 }
 
-// Recupera clientes
+// ===============================
+// 🔗 INTEGRAÇÃO COM O CAIXA
+// ===============================
+let saldoCaixa = parseFloat(localStorage.getItem("saldoCaixa") || "0");
+let caixaAberto = localStorage.getItem("caixaAberto") === "true";
+
+function atualizarSaldo() {
+  const saldoSpan = document.getElementById("saldo-caixa");
+  if (saldoSpan) {
+    saldoSpan.textContent = saldoCaixa.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
+  localStorage.setItem("saldoCaixa", saldoCaixa.toFixed(2));
+}
+
+atualizarSaldo();
+
+// ===============================
+// 📦 CLIENTES
+// ===============================
 let clientes = JSON.parse(localStorage.getItem("clientes") || "[]");
 
 // Senha de admin
 const senhaAdmin = "admin";
+
+// Funções de CPF, cálculo de dívida, renderização, modais e eventos seguem igual ao código original...
+
 
 
 // Função para validar CPF
@@ -406,4 +425,5 @@ document.getElementById("tabelaClientes").addEventListener("click", e => {
 // Inicializa tabela
 renderizarClientes();
 atualizarSaldo();
+
 
