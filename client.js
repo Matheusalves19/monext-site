@@ -65,17 +65,19 @@ document.addEventListener("DOMContentLoaded", () => {
     return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   }
 
-  function calcularDivida(cliente) {
-    let total = 0;
-    cliente.emprestimos?.forEach(emp => {
+  // Calcula dívida do cliente
+function calcularDivida(cliente) {
+  let total = 0;
+  if (cliente.emprestimos) {
+    cliente.emprestimos.forEach(emp => {
       emp.parcelas.forEach(p => {
         if (!p.pago) total += p.valor;
       });
     });
-    cliente.divida = total;
-    return total;
   }
-
+  cliente.divida = total;
+  return total;
+}
   // ===============================
   // 🧾 RENDERIZAÇÃO
   // ===============================
@@ -289,3 +291,4 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
 });
+
